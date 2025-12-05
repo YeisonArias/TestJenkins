@@ -1,61 +1,61 @@
-import java.text.SimpleDateFormat
-
-def dateFormat = new SimpleDateFormat("yyyyMMddHHmm")
-def date = new Date()
-def timestamp = dateFormat.format(date).toString()
-
 pipeline {
     agent any
 
+    environment {
+        PATH = "C:\\Program Files\\Git\\bin;${env.PATH}"
+    }
+
     stages {
 
-        stage('Actualizar fuentes Nodo Windows') {
+        stage('Checkout') {
             steps {
-                git url: 'https://github.com/YeisonArias/TestJenkins.git',
-                    branch: 'main'
+                git branch: 'main',
+                    url: 'https://github.com/TU_USUARIO/TU_REPOSITORIO.git'
             }
         }
 
-        stage('Test_GUI_Junit') {
+        stage('Build') {
+            steps {
+                bat 'mvn clean verify -DskipTests=false'
+            }
+        }
+
+        stage('Backup Evidencias') {
             steps {
                 script {
-                    try {
-                        echo "Ejecutando Runner: ${RUNNER}"
+                    echo "Iniciando backup de evidencias..."
 
-                        // Ejecutar Serenity + JUnit4 usando gradlew
-                        bat """
-                            .\\gradlew clean test aggregate -Dtest.single=${RUNNER}
-                        """
+                    // Ruta de la carpeta generada por Serenity
+                    def sourceFolder = "C:\\Users\\yf_ar\\.jenkins\\workspace\\Pipeline Serenity\\target\\site\\serenity"
 
-                        echo 'Ejecución de pruebas completada sin fallos'
-                    } catch (ex) {
-                        echo 'La ejecución del framework JUnit finalizó con fallos'
-                        error('Failed')
-                    }
+                    // Nombre del backup basado en fecha y hora
+                    def timestamp = new Date().format("yyyyMMddHHmm")
+                    def backupFolder = "serenity_${timestamp}"
+
+                    echo "Validando existencia de carpeta: ${sourceFolder}"
+
+                    // 🔥 Corrección final: usar IF EXIST para evitar error
+                    bat """
+                    IF EXIST "${sourceFolder}" (
+                        echo Carpeta encontrada, se procede a renombrar...
+                        rename "${sourceFolder}" "${backupFolder}"
+                        echo Backup finalizado exitosamente
+                    ) ELSE (
+                        echo La carpeta de evidencias NO existe. No se puede realizar el backup.
+                        exit 1
+                    )
+                    """
                 }
             }
         }
+    }
 
-        stage('BackupEvidencias') {
-            steps {
-                script {
-                    try {
-                        echo "Realizando backup de evidencias con timestamp: ${timestamp}"
-
-                        bat """
-                            rename "${WORKSPACE}\\target\\site\\serenity" "serenity_${timestamp}"
-                        """
-
-                        bat ".\\gradlew clean"
-
-                        echo 'Backup de evidencias realizado con éxito'
-                    } catch (ex) {
-                        echo 'Backup de evidencias finalizado con fallos'
-                        error('Failed')
-                    }
-                }
-            }
+    post {
+        success {
+            echo "Pipeline finalizado correctamente."
         }
-
-    } // fin stages
+        failure {
+            echo "El pipeline terminó con errores."
+        }
+    }
 }
