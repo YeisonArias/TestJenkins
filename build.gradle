@@ -1,0 +1,56 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    dependencies {
+        classpath "net.serenity-bdd:serenity-gradle-plugin:4.2.13"
+    }
+}
+
+apply plugin: "java"
+apply plugin: "net.serenity-bdd.serenity-gradle-plugin"
+
+group = "com.ejemplo"
+version = "1.0.0"
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    serenityVersion = '4.2.13'
+    cucumberVersion = '7.18.1'
+}
+
+dependencies {
+
+    // SERENITY CORE
+    implementation "net.serenity-bdd:serenity-core:${serenityVersion}"
+
+    // SERENITY + CUCUMBER (USA JUNIT4)
+    testImplementation "net.serenity-bdd:serenity-cucumber:${serenityVersion}"
+    testImplementation "io.cucumber:cucumber-java:${cucumberVersion}"
+
+    // RUNNER JUNIT 4
+    implementation "junit:junit:4.13.2"
+
+    // SCREENPLAY
+    testImplementation "net.serenity-bdd:serenity-screenplay:${serenityVersion}"
+    testImplementation "net.serenity-bdd:serenity-screenplay-webdriver:${serenityVersion}"
+
+    // ASSERTJ
+    testImplementation "org.assertj:assertj-core:3.25.3"
+
+    // WEBDRIVERMANAGER ACTUALIZADO
+    testImplementation "io.github.bonigarcia:webdrivermanager:5.9.2"
+}
+
+test {
+    systemProperty "cucumber.filter.tags",
+            System.getProperty("cucumber.filter.tags", "")
+}
