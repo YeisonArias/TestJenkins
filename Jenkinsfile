@@ -30,7 +30,7 @@ pipeline {
             steps {
                 script {
 
-                    def sourceDir = "${WORKSPACE}\\target\\site\\serenity"
+                    def sourceDir = "${WORKSPACE}\\target"
                     def timestamp = new Date().format('yyyyMMddHHmm')
                     def backupName = "serenity_${timestamp}"
 
