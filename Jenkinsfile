@@ -10,7 +10,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/TU_USUARIO/TU_REPOSITORIO.git'
+                    url: 'https://github.com/YeisonArias/TestJenkins.git'
             }
         }
 
@@ -25,16 +25,13 @@ pipeline {
                 script {
                     echo "Iniciando backup de evidencias..."
 
-                    // Ruta de la carpeta generada por Serenity
                     def sourceFolder = "C:\\Users\\yf_ar\\.jenkins\\workspace\\Pipeline Serenity\\target\\site\\serenity"
 
-                    // Nombre del backup basado en fecha y hora
                     def timestamp = new Date().format("yyyyMMddHHmm")
                     def backupFolder = "serenity_${timestamp}"
 
                     echo "Validando existencia de carpeta: ${sourceFolder}"
 
-                    // 🔥 Corrección final: usar IF EXIST para evitar error
                     bat """
                     IF EXIST "${sourceFolder}" (
                         echo Carpeta encontrada, se procede a renombrar...
