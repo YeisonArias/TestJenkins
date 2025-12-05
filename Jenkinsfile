@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        PATH = "C:\\Program Files\\Git\\bin;${env.PATH}"
-    }
-
     stages {
 
         stage('Checkout') {
@@ -16,32 +12,42 @@ pipeline {
 
         stage('Build') {
             steps {
-                bat 'mvn clean verify -DskipTests=false'
+                script {
+                    echo "Ejecutando pruebas con Gradle Wrapper (gradlew)..."
+
+                    // Si quieres ejecutar un Runner específico:
+                    if (env.RUNNER) {
+                        bat "gradlew -Dtest.single=${env.RUNNER} clean test aggregate"
+                    } else {
+                        // Ejecución estándar sin Runner
+                        bat "gradlew clean test aggregate"
+                    }
+                }
             }
         }
 
         stage('Backup Evidencias') {
             steps {
                 script {
-                    echo "Iniciando backup de evidencias..."
 
-                    def sourceFolder = "C:\\Users\\yf_ar\\.jenkins\\workspace\\Pipeline Serenity\\target\\site\\serenity"
+                    def sourceDir = "${WORKSPACE}\\target\\site\\serenity"
+                    def timestamp = new Date().format('yyyyMMddHHmm')
+                    def backupName = "serenity_${timestamp}"
 
-                    def timestamp = new Date().format("yyyyMMddHHmm")
-                    def backupFolder = "serenity_${timestamp}"
-
-                    echo "Validando existencia de carpeta: ${sourceFolder}"
+                    echo "Verificando carpeta de evidencias..."
 
                     bat """
-                    IF EXIST "${sourceFolder}" (
-                        echo Carpeta encontrada, se procede a renombrar...
-                        rename "${sourceFolder}" "${backupFolder}"
-                        echo Backup finalizado exitosamente
+                    IF EXIST "${sourceDir}" (
+                        echo Evidencias encontradas en: ${sourceDir}
+                        rename "${sourceDir}" "${backupName}"
+                        echo Backup realizado: ${backupName}
                     ) ELSE (
-                        echo La carpeta de evidencias NO existe. No se puede realizar el backup.
-                        exit 1
+                        echo No existe carpeta de evidencias. No se realiza backup.
                     )
                     """
+
+                    // Limpieza del proyecto
+                    bat "gradlew clean"
                 }
             }
         }
@@ -52,7 +58,7 @@ pipeline {
             echo "Pipeline finalizado correctamente."
         }
         failure {
-            echo "El pipeline terminó con errores."
+            echo "Pipeline finalizó con errores."
         }
     }
 }
